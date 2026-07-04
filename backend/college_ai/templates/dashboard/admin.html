@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="card stat-card primary shadow-sm h-100">
+      <div class="card-body py-3">
+        <div class="text-muted small">Students</div>
+        <div class="fs-3 fw-bold text-primary">{{ student_count }}</div>
+        <a href="{% url 'student_list' %}" class="small text-decoration-none">Manage →</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="card stat-card success shadow-sm h-100">
+      <div class="card-body py-3">
+        <div class="text-muted small">Teachers</div>
+        <div class="fs-3 fw-bold text-success">{{ teacher_count }}</div>
+        <a href="{% url 'register_teacher' %}" class="small text-decoration-none">Add →</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="card stat-card warning shadow-sm h-100">
+      <div class="card-body py-3">
+        <div class="text-muted small">Classes</div>
+        <div class="fs-3 fw-bold text-warning">{{ class_count }}</div>
+        <a href="{% url 'class_list' %}" class="small text-decoration-none">Manage →</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="card stat-card info shadow-sm h-100">
+      <div class="card-body py-3">
+        <div class="text-muted small">Departments</div>
+        <div class="fs-3 fw-bold text-info">{{ dept_count }}</div>
+        <a href="{% url 'department_list' %}" class="small text-decoration-none">Manage →</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="card stat-card primary shadow-sm h-100">
+      <div class="card-body py-3">
+        <div class="text-muted small">Subjects</div>
+        <div class="fs-3 fw-bold text-primary">{{ subject_count }}</div>
+        <a href="{% url 'subject_list' %}" class="small text-decoration-none">Manage →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick actions -->
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title fw-semibold mb-3">Quick Actions</h6>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{% url 'student_create' %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-person-plus me-1"></i>Add Student
+          </a>
+          <a href="{% url 'register_teacher' %}" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-person-badge me-1"></i>Add Teacher
+          </a>
+          <a href="{% url 'class_list' %}" class="btn btn-sm btn-outline-warning">
+            <i class="bi bi-building me-1"></i>Manage Classes
+          </a>
+          <a href="{% url 'subject_list' %}" class="btn btn-sm btn-outline-info">
+            <i class="bi bi-book me-1"></i>Manage Subjects
+          </a>
+          <a href="{% url 'department_list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-diagram-3 me-1"></i>Departments
+          </a>
+          <a href="/admin/" class="btn btn-sm btn-dark">
+            <i class="bi bi-gear me-1"></i>Django Admin
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Recent Students -->
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+        Recent Students
+        <a href="{% url 'student_list' %}" class="small text-decoration-none">View all</a>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light"><tr>
+            <th>Reg No</th><th>Name</th><th>Class</th>
+          </tr></thead>
+          <tbody>
+          {% for s in recent_students %}
+          <tr>
+            <td>{{ s.regno }}</td>
+            <td>{{ s.name }}</td>
+            <td>{{ s.student_class }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="text-muted text-center py-3">No students yet.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Teachers -->
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+        Recent Teachers
+        <a href="{% url 'register_teacher' %}" class="small text-decoration-none">Add new</a>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light"><tr>
+            <th>ID</th><th>Name</th><th>Department</th>
+          </tr></thead>
+          <tbody>
+          {% for t in recent_teachers %}
+          <tr>
+            <td>{{ t.teacher_id }}</td>
+            <td>{{ t.user.get_full_name|default:t.user.username }}</td>
+            <td>{{ t.department.code }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="text-muted text-center py-3">No teachers yet.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+<!-- AI Risk Section -->
+<div class="row g-3 mt-2">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">
+          <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>AI Risk Flags
+        </span>
+        {% if ai_risk_students is not None %}
+        <span class="badge bg-danger">{{ ai_risk_students|length }} at risk</span>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if ai_risk_students is None %}
+        <div class="alert alert-secondary mb-0 py-2">
+          <i class="bi bi-info-circle me-2"></i>
+          AI model not trained yet.
+          Run <code>python manage.py seed_ai_data</code> then
+          <code>python manage.py train_risk_model</code> to enable risk scores.
+        </div>
+        {% elif ai_risk_students %}
+        <p class="text-muted small mb-2">
+          ⚠️ Labels are rule-derived (attendance &lt;75% OR marks &lt;40% OR missed submissions &gt;30%).
+          Not real historical outcome data.
+        </p>
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Reg No</th><th>Name</th>
+              <th>Attendance</th><th>Avg Marks</th>
+              <th>Missed Sub%</th><th>Risk Score</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for r in ai_risk_students %}
+          <tr>
+            <td class="fw-semibold">{{ r.regno }}</td>
+            <td>{{ r.name }}</td>
+            <td class="text-{% if r.features.attendance_percentage < 75 %}danger{% else %}success{% endif %}">
+              {{ r.features.attendance_percentage|floatformat:1 }}%
+            </td>
+            <td class="text-{% if r.features.average_marks < 40 %}danger{% else %}success{% endif %}">
+              {{ r.features.average_marks|floatformat:1 }}%
+            </td>
+            <td class="text-{% if r.features.late_or_missed_submission_rate > 0.3 %}danger{% else %}success{% endif %}">
+              {{ r.features.late_or_missed_submission_rate|floatformat:2 }}
+            </td>
+            <td>
+              <div class="progress" style="height:16px;min-width:80px;">
+                <div class="progress-bar bg-danger"
+                     style="width:{{ r.risk_score|floatformat:0 }}0%">
+                  {{ r.risk_score|floatformat:2 }}
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="alert alert-success mb-0 py-2">
+          <i class="bi bi-check-circle me-2"></i>No at-risk students detected.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

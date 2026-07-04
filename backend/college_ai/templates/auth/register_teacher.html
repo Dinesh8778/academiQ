@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Register Teacher{% endblock %}
+{% block page_title %}Register Teacher{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <form method="post">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Username <span class="text-danger">*</span></label>
+              <input type="text" name="username" class="form-control"
+                     value="{{ form_data.username|default:'' }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Teacher ID <span class="text-danger">*</span></label>
+              <input type="text" name="teacher_id" class="form-control"
+                     value="{{ form_data.teacher_id|default:'' }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">First Name</label>
+              <input type="text" name="first_name" class="form-control"
+                     value="{{ form_data.first_name|default:'' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Last Name</label>
+              <input type="text" name="last_name" class="form-control"
+                     value="{{ form_data.last_name|default:'' }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Email</label>
+              <input type="email" name="email" class="form-control"
+                     value="{{ form_data.email|default:'' }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Department <span class="text-danger">*</span></label>
+              <select name="department" class="form-select" required>
+                <option value="">— Select —</option>
+                {% for dept in departments %}
+                <option value="{{ dept.pk }}"
+                  {% if form_data.department == dept.pk|stringformat:"s" %}selected{% endif %}>
+                  {{ dept.code }} - {{ dept.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+              <input type="password" name="password" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Confirm Password <span class="text-danger">*</span></label>
+              <input type="password" name="password2" class="form-control" required>
+            </div>
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary fw-semibold">
+              <i class="bi bi-person-plus me-1"></i>Register Teacher
+            </button>
+            <a href="{% url 'login' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

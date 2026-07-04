@@ -1,0 +1,174 @@
+{# Floating chat widget — include in any dashboard template #}
+{# Usage: {% include "partials/chat_widget.html" %} #}
+
+<!-- Chat Toggle Button -->
+<button id="chatToggle"
+        style="position:fixed;bottom:24px;right:24px;z-index:1050;
+               width:52px;height:52px;border-radius:50%;border:none;
+               background:#0d6efd;color:#fff;font-size:1.4rem;
+               box-shadow:0 4px 12px rgba(0,0,0,.25);cursor:pointer;"
+        title="AcademiQ Assistant">
+  <i class="bi bi-chat-dots-fill"></i>
+</button>
+
+<!-- Chat Window -->
+<div id="chatWindow"
+     style="display:none;position:fixed;bottom:88px;right:24px;z-index:1049;
+            width:360px;max-height:520px;display:none;flex-direction:column;
+            background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);
+            overflow:hidden;font-size:.9rem;">
+
+  <!-- Header -->
+  <div style="background:#0d6efd;color:#fff;padding:.75rem 1rem;
+              display:flex;justify-content:space-between;align-items:center;">
+    <span><i class="bi bi-robot me-2"></i><strong>AcademiQ Assistant</strong></span>
+    <button onclick="document.getElementById('chatWindow').style.display='none'"
+            style="background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer;">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <!-- Messages area -->
+  <div id="chatMessages"
+       style="flex:1;overflow-y:auto;padding:1rem;
+              background:#f8f9fa;min-height:240px;max-height:360px;">
+    <div class="text-muted small text-center py-3">
+      Ask me about your attendance, grades, assignments, or class data.
+    </div>
+  </div>
+
+  <!-- Input area -->
+  <div style="border-top:1px solid #dee2e6;padding:.6rem .75rem;
+              display:flex;gap:.5rem;background:#fff;">
+    <input id="chatInput" type="text" class="form-control form-control-sm"
+           placeholder="Type a message..." maxlength="2000"
+           style="border-radius:20px;">
+    <button id="chatSend" class="btn btn-primary btn-sm" style="border-radius:20px;white-space:nowrap;">
+      <i class="bi bi-send-fill"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+(function() {
+  // -----------------------------------------------------------------------
+  // Get CSRF token from cookie (for session auth fallback)
+  // -----------------------------------------------------------------------
+  function getCookie(name) {
+    let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? decodeURIComponent(v[2]) : null;
+  }
+
+  const toggleBtn   = document.getElementById('chatToggle');
+  const chatWindow  = document.getElementById('chatWindow');
+  const messagesDiv = document.getElementById('chatMessages');
+  const inputEl     = document.getElementById('chatInput');
+  const sendBtn     = document.getElementById('chatSend');
+  let history = [];
+
+  // Toggle visibility
+  toggleBtn.addEventListener('click', function() {
+    const visible = chatWindow.style.display === 'flex';
+    chatWindow.style.display = visible ? 'none' : 'flex';
+    chatWindow.style.flexDirection = 'column';
+    if (!visible) inputEl.focus();
+  });
+
+  // Append a message bubble
+  function appendMessage(role, text) {
+    const isUser = role === 'user';
+    const div = document.createElement('div');
+    div.style.cssText = [
+      'display:flex',
+      isUser ? 'justify-content:flex-end' : 'justify-content:flex-start',
+      'margin-bottom:.5rem',
+    ].join(';');
+    const bubble = document.createElement('div');
+    bubble.style.cssText = [
+      'max-width:80%',
+      'padding:.5rem .75rem',
+      'border-radius:12px',
+      isUser ? 'background:#0d6efd;color:#fff' : 'background:#fff;border:1px solid #dee2e6',
+      'white-space:pre-wrap',
+      'word-break:break-word',
+      'font-size:.85rem',
+    ].join(';');
+    bubble.textContent = text;
+    div.appendChild(bubble);
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  // Show typing indicator
+  function showTyping() {
+    const div = document.createElement('div');
+    div.id = 'typingIndicator';
+    div.style.cssText = 'display:flex;justify-content:flex-start;margin-bottom:.5rem;';
+    div.innerHTML = '<div style="background:#fff;border:1px solid #dee2e6;border-radius:12px;' +
+                    'padding:.4rem .75rem;font-size:.8rem;color:#6c757d;">Thinking...</div>';
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  function removeTyping() {
+    const t = document.getElementById('typingIndicator');
+    if (t) t.remove();
+  }
+
+  // Send message
+  async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+    inputEl.value = '';
+    sendBtn.disabled = true;
+
+    appendMessage('user', text);
+    showTyping();
+
+    try {
+      const resp = await fetch('/api/assistant/ask/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({ message: text, history: history }),
+      });
+
+      removeTyping();
+
+      if (resp.status === 429) {
+        appendMessage('assistant', '⚠️ Rate limit reached. Please wait a moment.');
+        sendBtn.disabled = false;
+        return;
+      }
+      if (resp.status === 401 || resp.status === 403) {
+        appendMessage('assistant', '🔒 Authentication required. Please log in.');
+        sendBtn.disabled = false;
+        return;
+      }
+
+      const data = await resp.json();
+      const answer = data.answer || 'No response received.';
+      appendMessage('assistant', answer);
+
+      // Keep history for context (last 6 turns = 3 exchanges)
+      history.push({ role: 'user', content: text });
+      history.push({ role: 'assistant', content: answer });
+      if (history.length > 12) history = history.slice(-12);
+
+    } catch (err) {
+      removeTyping();
+      appendMessage('assistant', '❌ Network error. Please try again.');
+    }
+
+    sendBtn.disabled = false;
+    inputEl.focus();
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  inputEl.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+})();
+</script>

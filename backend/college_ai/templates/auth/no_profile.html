@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Account Setup Incomplete{% endblock %}
+{% block page_title %}Account Setup Incomplete{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-6 text-center">
+    <i class="bi bi-exclamation-circle-fill text-warning" style="font-size:3rem;"></i>
+    <h4 class="mt-3">Profile Not Linked</h4>
+    <p class="text-muted">
+      Your account has been created but is not yet linked to a Teacher or Student profile.
+      Please contact an administrator.
+    </p>
+    <form method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-secondary">
+        <i class="bi bi-box-arrow-right me-1"></i>Logout
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

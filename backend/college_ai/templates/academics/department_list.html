@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Departments{% endblock %}
+{% block page_title %}Departments{% endblock %}
+{% block nav_depts %}active{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- List -->
+  <div class="col-md-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr><th>Code</th><th>Name</th><th>HOD</th><th class="text-end">Actions</th></tr>
+          </thead>
+          <tbody>
+          {% for d in departments %}
+          <tr>
+            <td class="fw-semibold">{{ d.code }}</td>
+            <td>{{ d.name }}</td>
+            <td class="text-muted small">{{ d.hod|default:"—" }}</td>
+            <td class="text-end">
+              <a href="{% url 'department_edit' d.pk %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form method="post" action="{% url 'department_delete' d.pk %}" class="d-inline"
+                    onsubmit="return confirm('Delete {{ d.name }}?')">
+                {% csrf_token %}
+                <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center text-muted py-4">No departments yet.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add form -->
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Add Department</div>
+      <div class="card-body">
+        <form method="post" action="{% url 'department_list' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Code <span class="text-danger">*</span></label>
+            <input type="text" name="code" class="form-control" placeholder="e.g. CSE" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control"
+                   placeholder="Computer Science &amp; Engineering" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">HOD</label>
+            <select name="hod" class="form-select">
+              <option value="">— None —</option>
+              {% for t in teachers %}
+              <option value="{{ t.pk }}">{{ t.user.get_full_name|default:t.user.username }} ({{ t.teacher_id }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-plus-lg me-1"></i>Add
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

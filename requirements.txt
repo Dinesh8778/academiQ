@@ -1,0 +1,38 @@
+# Core
+Django==6.0.3
+djangorestframework==3.16.1
+djangorestframework-simplejwt==5.5.0
+PyJWT==2.9.0
+drf-spectacular==0.28.0
+uritemplate==4.2.0
+inflection==0.5.1
+
+# Environment / Config
+python-decouple==3.8
+
+# Database
+sqlparse==0.5.5
+
+# Async
+asgiref==3.11.1
+
+# ML / AI (future use)
+numpy==2.4.3
+pandas==3.0.1
+scikit-learn==1.8.0
+scipy==1.17.1
+joblib==1.5.3
+
+# Utilities
+six==1.17.0
+python-dateutil==2.9.0
+tzdata==2025.3
+threadpoolctl==3.6.0
+
+# Testing
+pytest==8.3.5
+pytest-django==4.9.0
+
+# Assistant / Groq API
+openai==1.57.0
+django-ratelimit==4.1.0

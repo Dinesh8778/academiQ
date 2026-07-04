@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Student{% endblock %}
+{% block page_title %}{{ action }} Student{% endblock %}
+{% block nav_students %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <form method="post">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Register Number <span class="text-danger">*</span></label>
+              <input type="text" name="regno" class="form-control"
+                     value="{{ student.regno|default:form_data.regno|default:'' }}"
+                     {% if student %}readonly{% endif %} required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+              <input type="text" name="name" class="form-control"
+                     value="{{ student.name|default:form_data.name|default:'' }}" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Class <span class="text-danger">*</span></label>
+              <select name="student_class" class="form-select" required>
+                <option value="">— Select Class —</option>
+                {% for cls in classes %}
+                <option value="{{ cls.pk }}"
+                  {% if student.student_class_id == cls.pk or form_data.student_class == cls.pk|stringformat:"s" %}
+                    selected{% endif %}>
+                  {{ cls }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Email</label>
+              <input type="email" name="email" class="form-control"
+                     value="{{ student.email|default:form_data.email|default:'' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Phone</label>
+              <input type="text" name="phone" class="form-control"
+                     value="{{ student.phone|default:form_data.phone|default:'' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Gender</label>
+              <select name="gender" class="form-select">
+                <option value="">— Select —</option>
+                <option value="M" {% if student.gender == "M" %}selected{% endif %}>Male</option>
+                <option value="F" {% if student.gender == "F" %}selected{% endif %}>Female</option>
+                <option value="O" {% if student.gender == "O" %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Guardian Name</label>
+              <input type="text" name="guardian_name" class="form-control"
+                     value="{{ student.guardian_name|default:'' }}">
+            </div>
+            {% if student %}
+            <div class="col-md-6 d-flex align-items-end">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="is_active" id="is_active"
+                       {% if student.is_active %}checked{% endif %}>
+                <label class="form-check-label fw-semibold" for="is_active">Active</label>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary fw-semibold">
+              <i class="bi bi-save me-1"></i>{{ action }}
+            </button>
+            <a href="{% url 'student_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

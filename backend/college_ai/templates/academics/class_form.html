@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Edit Class{% endblock %}
+{% block page_title %}Edit Class{% endblock %}
+{% block nav_classes %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Department</label>
+            <select name="department" class="form-select" required>
+              {% for d in departments %}
+              <option value="{{ d.pk }}" {% if cls.department_id == d.pk %}selected{% endif %}>
+                {{ d.code }} - {{ d.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label fw-semibold">Year</label>
+              <input type="number" name="year" class="form-control"
+                     value="{{ cls.year }}" min="1" max="6" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">Section</label>
+              <input type="text" name="section" class="form-control"
+                     value="{{ cls.section }}" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Academic Year</label>
+            <input type="text" name="academic_year" class="form-control"
+                   value="{{ cls.academic_year }}">
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Class Adviser</label>
+            <select name="adviser" class="form-select">
+              <option value="">— None —</option>
+              {% for t in teachers %}
+              <option value="{{ t.pk }}" {% if cls.adviser_id == t.pk %}selected{% endif %}>
+                {{ t.user.get_full_name|default:t.user.username }} ({{ t.teacher_id }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary fw-semibold">
+              <i class="bi bi-save me-1"></i>Save
+            </button>
+            <a href="{% url 'class_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

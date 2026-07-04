@@ -1,16 +1,36 @@
 # Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.pyc
 
 # Virtual Environment
 venv/
+.venv/
+env/
 
 # Django
 db.sqlite3
 *.log
+*.sqlite3
+media/
 
 # VS Code
 .vscode/
 
-# Environment variables
+# Environment variables — NEVER commit these
 .env
+
+# Static collected files
+staticfiles/
+static_root/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/

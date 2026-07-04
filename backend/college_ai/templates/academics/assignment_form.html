@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}New Assignment{% endblock %}
+{% block page_title %}Create Assignment{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+            <input type="text" name="title" class="form-control"
+                   placeholder="e.g. Lab Report 1" required autofocus>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Description</label>
+            <textarea name="description" class="form-control" rows="3"
+                      placeholder="Assignment instructions..."></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Due Date &amp; Time <span class="text-danger">*</span></label>
+            <input type="datetime-local" name="due_date" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Class &amp; Subject <span class="text-danger">*</span></label>
+            <select name="subject" id="subjectSelect" class="form-select mb-2" required>
+              <option value="">— Select Subject —</option>
+              {% for tsc in teaching %}
+              <option value="{{ tsc.subject.pk }}"
+                      data-class="{{ tsc.student_class.pk }}">
+                {{ tsc.subject.name }} — {{ tsc.student_class }}
+              </option>
+              {% endfor %}
+            </select>
+            <select name="student_class" id="classSelect" class="form-select" required>
+              <option value="">— Select Class —</option>
+              {% for tsc in teaching %}
+              <option value="{{ tsc.student_class.pk }}"
+                      data-subject="{{ tsc.subject.pk }}">
+                {{ tsc.student_class }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary fw-semibold">
+              <i class="bi bi-file-earmark-plus me-1"></i>Create Assignment
+            </button>
+            <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* Auto-sync class dropdown when subject is chosen */
+document.getElementById('subjectSelect').addEventListener('change', function() {
+  const classId = this.options[this.selectedIndex].dataset.class;
+  const classSelect = document.getElementById('classSelect');
+  for (let opt of classSelect.options) {
+    if (opt.value === classId) { opt.selected = true; break; }
+  }
+});
+</script>
+{% endblock %}

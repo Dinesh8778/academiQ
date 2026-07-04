@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load student_extras %}
+{% block title %}Student Dashboard{% endblock %}
+{% block page_title %}Student Dashboard{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<!-- Profile banner -->
+<div class="card border-0 shadow-sm mb-4 bg-success text-white">
+  <div class="card-body">
+    <h5 class="fw-bold mb-0">{{ student.name }}</h5>
+    <small class="opacity-75">{{ student.regno }} &middot; {{ student.student_class }}</small>
+  </div>
+</div>
+
+<div class="row g-3">
+
+  <!-- Attendance Summary -->
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">Attendance</div>
+      <div class="card-body text-center">
+        <div class="position-relative d-inline-block mb-2">
+          <svg width="120" height="120" viewBox="0 0 36 36">
+            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              fill="none" stroke="#e9ecef" stroke-width="3.8"/>
+            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              fill="none" stroke="{% if att_pct >= 75 %}#198754{% elif att_pct >= 60 %}#ffc107{% else %}#dc3545{% endif %}"
+              stroke-width="3.8" stroke-dasharray="{{ att_pct }}, 100"/>
+            <text x="18" y="20.35" text-anchor="middle" font-size="8" font-weight="bold"
+                  fill="{% if att_pct >= 75 %}#198754{% elif att_pct >= 60 %}#fd7e14{% else %}#dc3545{% endif %}">
+              {{ att_pct }}%
+            </text>
+          </svg>
+        </div>
+        <div class="row text-center mt-2">
+          <div class="col-6">
+            <div class="fw-bold text-success fs-5">{{ present_att }}</div>
+            <small class="text-muted">Present</small>
+          </div>
+          <div class="col-6">
+            <div class="fw-bold text-danger fs-5">{{ absent_att }}</div>
+            <small class="text-muted">Absent</small>
+          </div>
+        </div>
+        {% if att_pct < 75 %}
+        <div class="alert alert-warning mt-3 mb-0 py-1 small">
+          <i class="bi bi-exclamation-triangle me-1"></i>Below 75% attendance
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Assignments -->
+  <div class="col-md-5">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">Assignments</div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for a in assignments %}
+          {% with sub=my_submissions|default:{}|get_item:a.pk %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="fw-semibold small">{{ a.title }}</div>
+                <small class="text-muted">{{ a.subject.name }} &middot;
+                  Due {{ a.due_date|date:"d M Y" }}</small>
+              </div>
+              {% if sub and sub.file %}
+              <span class="badge bg-success">Submitted</span>
+              {% elif sub %}
+              <form method="post" action="#" enctype="multipart/form-data" class="d-flex gap-1">
+                {% csrf_token %}
+                <input type="hidden" name="assignment_id" value="{{ a.pk }}">
+                <input type="file" name="file" class="form-control form-control-sm" style="max-width:140px" required>
+                <button class="btn btn-sm btn-primary">Submit</button>
+              </form>
+              {% else %}
+              <span class="badge bg-secondary">Not open</span>
+              {% endif %}
+            </div>
+          </li>
+          {% endwith %}
+          {% empty %}
+          <li class="list-group-item text-muted text-center py-3">No assignments.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Card -->
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">Report Card</div>
+      <div class="card-body">
+        <div class="text-center mb-3">
+          <div class="fs-2 fw-bold {% if overall_pct >= 60 %}text-success{% else %}text-danger{% endif %}">
+            {{ overall_pct }}%
+          </div>
+          <small class="text-muted">Overall</small>
+        </div>
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light"><tr>
+            <th>Subject</th><th>Exam</th><th class="text-end">%</th>
+          </tr></thead>
+          <tbody>
+          {% for m in marks %}
+          <tr>
+            <td class="small">{{ m.subject.code }}</td>
+            <td class="small">{{ m.get_exam_type_display }}</td>
+            <td class="text-end small fw-semibold
+              {% if m.percentage >= 60 %}text-success{% else %}text-danger{% endif %}">
+              {{ m.percentage }}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="text-muted text-center">No marks yet.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
