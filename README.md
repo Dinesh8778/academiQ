@@ -304,7 +304,24 @@ The suite covers permissions, bulk attendance, report card calculation, AI risk 
 
 ---
 
+## Deployment Notes (Render)
+
+This project is configured for one-click deployment on Render using the `render.yaml` blueprint.
+
+### Pre-requisites & Environment Variables
+The following environment variables must be defined in the Render Dashboard manually (never commit them):
+* `GROQ_API_KEY`: API key for the LLM-powered virtual assistant.
+* `ALLOWED_HOSTS`: Set to `127.0.0.1,localhost,your-app-name.onrender.com`.
+* `CSRF_TRUSTED_ORIGINS`: Set to `https://your-app-name.onrender.com`.
+
+### Known Limitations
+> [!WARNING]
+> **Ephemeral File System**: Render's free tier has an ephemeral disk. Uploaded media files (like student assignment submissions and teacher-uploaded guides) do NOT persist across redeploys, restarts, or server sleep cycles. In a real-world production deployment, you must integrate an external object storage service (such as AWS S3 or Cloudinary) and modify Django's file storage settings to point to that backend.
+
+---
+
 ## Future Enhancements
+
 
 - Timetable management
 - Fee management module
