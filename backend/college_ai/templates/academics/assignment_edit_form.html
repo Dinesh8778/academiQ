@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Edit Assignment{% endblock %}
+{% block page_title %}Edit Assignment{% endblock %}
+{% block nav_assignments %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+            <input type="text" name="title" class="form-control"
+                   value="{% if assignment %}{{ assignment.title }}{% else %}{{ form_data.title }}{% endif %}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Description</label>
+            <textarea name="description" class="form-control" rows="3">{% if assignment %}{{ assignment.description }}{% else %}{{ form_data.description }}{% endif %}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Due Date &amp; Time <span class="text-danger">*</span></label>
+            <input type="datetime-local" name="due_date" class="form-control"
+                   value="{% if assignment %}{{ assignment.due_date|date:'Y-m-d\TH:i' }}{% else %}{{ form_data.due_date }}{% endif %}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Subject <span class="text-danger">*</span></label>
+            <select name="subject" class="form-select mb-2" required>
+              <option value="">— Select Subject —</option>
+              {% for s in subjects %}
+              <option value="{{ s.pk }}"
+                {% if assignment %}
+                  {% if assignment.subject_id == s.pk %}selected{% endif %}
+                {% else %}
+                  {% if form_data.subject == s.pk|stringformat:"s" %}selected{% endif %}
+                {% endif %}>
+                {{ s.code }} - {{ s.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Class <span class="text-danger">*</span></label>
+            <select name="student_class" class="form-select" required>
+              <option value="">— Select Class —</option>
+              {% for cls in classes %}
+              <option value="{{ cls.pk }}"
+                {% if assignment %}
+                  {% if assignment.student_class_id == cls.pk %}selected{% endif %}
+                {% else %}
+                  {% if form_data.student_class == cls.pk|stringformat:"s" %}selected{% endif %}
+                {% endif %}>
+                {{ cls }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary fw-semibold">
+              <i class="bi bi-save me-1"></i>Save Changes
+            </button>
+            <a href="{% url 'assignment_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

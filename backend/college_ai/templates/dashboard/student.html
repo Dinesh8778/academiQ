@@ -59,7 +59,7 @@
       <div class="card-body p-0">
         <ul class="list-group list-group-flush">
           {% for a in assignments %}
-          {% with sub=my_submissions|default:{}|get_item:a.pk %}
+          {% with sub=my_submissions|get_item:a.pk %}
           <li class="list-group-item">
             <div class="d-flex justify-content-between align-items-start">
               <div>
@@ -67,17 +67,26 @@
                 <small class="text-muted">{{ a.subject.name }} &middot;
                   Due {{ a.due_date|date:"d M Y" }}</small>
               </div>
-              {% if sub and sub.file %}
-              <span class="badge bg-success">Submitted</span>
-              {% elif sub %}
-              <form method="post" action="#" enctype="multipart/form-data" class="d-flex gap-1">
-                {% csrf_token %}
-                <input type="hidden" name="assignment_id" value="{{ a.pk }}">
-                <input type="file" name="file" class="form-control form-control-sm" style="max-width:140px" required>
-                <button class="btn btn-sm btn-primary">Submit</button>
-              </form>
+              {% if sub %}
+                <div class="d-flex flex-column align-items-end">
+                  {% if sub.grade is not None %}
+                    <span class="badge bg-success">Graded: {{ sub.grade }}</span>
+                  {% else %}
+                    <span class="badge bg-info mb-1">Submitted</span>
+                    {% if a.due_date >= now %}
+                      <a href="{% url 'student_assignment_submit' a.pk %}" class="btn btn-sm btn-outline-secondary py-0 px-2 fw-semibold" style="font-size: 0.75rem;">Resubmit</a>
+                    {% endif %}
+                  {% endif %}
+                </div>
               {% else %}
-              <span class="badge bg-secondary">Not open</span>
+                <div class="d-flex flex-column align-items-end">
+                  {% if a.due_date < now %}
+                    <span class="badge bg-danger">Overdue / Closed</span>
+                  {% else %}
+                    <span class="badge bg-secondary mb-1">Not submitted</span>
+                    <a href="{% url 'student_assignment_submit' a.pk %}" class="btn btn-sm btn-primary py-0 px-2 fw-semibold" style="font-size: 0.75rem;">Submit</a>
+                  {% endif %}
+                </div>
               {% endif %}
             </div>
           </li>
@@ -120,6 +129,30 @@
           {% endfor %}
           </tbody>
         </table>
+        
+        {% if my_submissions.values %}
+        <div class="mt-4 pt-2 border-top">
+          <div class="fw-semibold small text-muted mb-2">Assignment Grades</div>
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="small">Assignment</th>
+                <th class="text-end small">Grade</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sub in my_submissions.values %}
+              <tr>
+                <td class="small text-truncate" style="max-width: 120px;" title="{{ sub.assignment.title }}">{{ sub.assignment.title }}</td>
+                <td class="text-end small fw-semibold {% if sub.grade is not None %}text-success{% else %}text-muted{% endif %}">
+                  {% if sub.grade is not None %}{{ sub.grade }}{% else %}—{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>

@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'attendance',
     'ai_engine',
     'assistant',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -71,6 +72,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'notifications.context_processors.notifications_context',
             ],
         },
     },
@@ -210,3 +212,8 @@ GROQ_MODEL = 'llama-3.3-70b-versatile'
 # Assistant rate limiting
 # ---------------------------------------------------------------------------
 ASSISTANT_RATE_LIMIT = '10/m'  # 10 requests per minute per user
+
+# ---------------------------------------------------------------------------
+# Academic Grading Rules
+# ---------------------------------------------------------------------------
+PASS_THRESHOLD_PCT = 40.0

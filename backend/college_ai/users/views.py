@@ -111,6 +111,18 @@ class AdminDashboardView(View):
             context['ai_risk_students'] = None
             context['ai_total_students'] = 0
 
+        # Department exam performance comparison
+        try:
+            from assistant.tools import get_department_exam_comparison
+            from academics.models import Mark
+            selected_comparison_exam = request.GET.get('comparison_exam_type', 'END')
+            comparison_results = get_department_exam_comparison(request.user, selected_comparison_exam)
+            context['comparison_exam_types'] = Mark.EXAM_TYPE_CHOICES
+            context['selected_comparison_exam'] = selected_comparison_exam
+            context['comparison_results'] = comparison_results.get('comparison', [])
+        except Exception:
+            context['comparison_results'] = []
+
         return render(request, self.template_name, context)
 
 
@@ -202,6 +214,7 @@ class StudentDashboardView(View):
         total_max = sum(float(m.max_marks) for m in marks)
         overall_pct = round((total_obt / total_max * 100), 1) if total_max > 0 else 0
 
+        from django.utils import timezone
         context = {
             'student': student,
             'att_pct': att_pct,
@@ -212,6 +225,7 @@ class StudentDashboardView(View):
             'my_submissions': my_submissions,
             'marks': marks,
             'overall_pct': overall_pct,
+            'now': timezone.now(),
         }
         return render(request, self.template_name, context)
 
@@ -395,3 +409,153 @@ def home_redirect(request):
     if request.user.is_authenticated:
         return redirect('dashboard')   # /auth/dashboard/ → DashboardRedirectView
     return redirect('login')           # /auth/login/
+
+
+# ===========================================================================
+# Teacher UI Views (Admin only)
+# ===========================================================================
+
+@method_decorator(login_required, name='dispatch')
+class TeacherListView(View):
+    def get(self, request):
+        if not request.user.is_staff:
+            messages.error(request, "Access denied.")
+            return redirect('dashboard')
+        teachers = Teacher.objects.select_related('user', 'department').all()
+        groups = []
+        from academics.models import Department
+        for dept in Department.objects.all():
+            dept_teachers = [t for t in teachers if t.department_id == dept.pk]
+            if dept_teachers:
+                groups.append({
+                    'department': dept,
+                    'teachers': dept_teachers
+                })
+        unassigned = [t for t in teachers if t.department is None]
+        if unassigned:
+            groups.append({
+                'department': None,
+                'teachers': unassigned
+            })
+        return render(request, 'users/teacher_list.html', {'groups': groups})
+
+
+@method_decorator(login_required, name='dispatch')
+class TeacherEditView(View):
+    template_name = 'users/teacher_form.html'
+
+    def get(self, request, pk):
+        if not request.user.is_staff:
+            messages.error(request, "Access denied.")
+            return redirect('dashboard')
+        teacher = get_object_or_404(Teacher, pk=pk)
+        from academics.models import Department
+        
+        credential_logs = []
+        if request.user.is_staff and teacher.user:
+            from users.models import CredentialChangeLog
+            credential_logs = CredentialChangeLog.objects.filter(target_user=teacher.user).order_by('-timestamp')
+
+        return render(request, self.template_name, {
+            'departments': Department.objects.all(),
+            'teacher': teacher,
+            'action': 'Edit',
+            'form_data': {},
+            'credential_logs': credential_logs
+        })
+
+    def post(self, request, pk):
+        if not request.user.is_staff:
+            messages.error(request, "Access denied.")
+            return redirect('dashboard')
+        teacher = get_object_or_404(Teacher, pk=pk)
+
+        teacher_id = request.POST.get('teacher_id', '').strip()
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip() or None
+        department_id = request.POST.get('department', '')
+
+        errors = []
+        if not teacher_id:
+            errors.append("Teacher ID is required.")
+        if Teacher.objects.exclude(pk=pk).filter(teacher_id=teacher_id).exists():
+            errors.append("Teacher ID already exists.")
+
+        # Credentials-related validation
+        new_username = request.POST.get('username', '').strip() if 'username' in request.POST else (teacher.user.username if teacher.user else '')
+        new_password = request.POST.get('password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+        
+        if request.user.is_staff and teacher.user:
+            username_changed = new_username != teacher.user.username
+            password_changed = bool(new_password)
+            
+            if username_changed:
+                if not new_username:
+                    errors.append("Username cannot be empty.")
+                elif User.objects.exclude(pk=teacher.user.pk).filter(username=new_username).exists():
+                    errors.append("Username is already taken.")
+            
+            if password_changed:
+                if new_password != confirm_password:
+                    errors.append("Passwords do not match.")
+                else:
+                    try:
+                        from django.contrib.auth.password_validation import validate_password
+                        from django.core.exceptions import ValidationError
+                        validate_password(new_password, user=teacher.user)
+                    except ValidationError as ve:
+                        errors.extend(ve.messages)
+
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+            from academics.models import Department
+            from users.models import CredentialChangeLog
+            credential_logs = CredentialChangeLog.objects.filter(target_user=teacher.user).order_by('-timestamp')
+            return render(request, self.template_name, {
+                'departments': Department.objects.all(),
+                'teacher': teacher,
+                'form_data': request.POST,
+                'action': 'Edit',
+                'credential_logs': credential_logs
+            })
+
+        # Save credentials first
+        if request.user.is_staff and teacher.user:
+            from users.utils import update_user_credentials
+            update_user_credentials(request, teacher.user, new_username, new_password, confirm_password)
+
+        user = teacher.user
+        user.first_name = first_name
+        user.last_name = last_name
+        user.email = email or ""
+        user.save()
+
+        teacher.teacher_id = teacher_id
+        if department_id:
+            from academics.models import Department
+            teacher.department = get_object_or_404(Department, pk=department_id)
+        else:
+            teacher.department = None
+        teacher.save()
+
+        messages.success(request, "Teacher updated.")
+        return redirect('teacher_list')
+
+
+@method_decorator(login_required, name='dispatch')
+class TeacherDeleteView(View):
+    def post(self, request, pk):
+        if not request.user.is_staff:
+            messages.error(request, "Admin only.")
+            return redirect('dashboard')
+        teacher = get_object_or_404(Teacher, pk=pk)
+        user = teacher.user
+        teacher.delete()
+        if user:
+            user.delete()
+        messages.success(request, "Teacher deleted.")
+        return redirect('teacher_list')
+

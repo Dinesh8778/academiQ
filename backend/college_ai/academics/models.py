@@ -173,6 +173,24 @@ class Submission(models.Model):
 # ---------------------------------------------------------------------------
 # Mark / Grade
 # ---------------------------------------------------------------------------
+from django.conf import settings
+
+def calculate_grade(percentage):
+    if percentage >= 90:
+        return 'A'
+    elif percentage >= 75:
+        return 'B'
+    elif percentage >= 60:
+        return 'C'
+    elif percentage >= 40:
+        return 'D'
+    else:
+        return 'F'
+
+def is_passing(percentage):
+    threshold = getattr(settings, 'PASS_THRESHOLD_PCT', 40.0)
+    return percentage >= threshold
+
 class Mark(models.Model):
 
     EXAM_TYPE_CHOICES = [
@@ -213,3 +231,30 @@ class Mark(models.Model):
         if self.max_marks > 0:
             return round((self.marks_obtained / self.max_marks) * 100, 2)
         return 0
+
+    @property
+    def grade(self):
+        return calculate_grade(self.percentage)
+
+    @property
+    def is_pass(self):
+        return is_passing(self.percentage)
+
+    def get_rank(self):
+        marks = Mark.objects.filter(
+            student__student_class=self.student.student_class,
+            subject=self.subject,
+            exam_type=self.exam_type
+        ).order_by('-marks_obtained')
+        
+        current_rank = 1
+        for idx, m in enumerate(marks):
+            if idx > 0 and m.marks_obtained < marks[idx - 1].marks_obtained:
+                current_rank = idx + 1
+            if m.pk == self.pk:
+                return current_rank
+        return 1
+
+    @property
+    def class_rank(self):
+        return self.get_rank()

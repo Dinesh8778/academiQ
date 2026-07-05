@@ -55,8 +55,8 @@
       <ul class="nav flex-column mb-2">
         <li><a class="nav-link {% block nav_students %}{% endblock %}" href="{% url 'student_list' %}">
           <i class="bi bi-people me-2"></i>Students</a></li>
-        <li><a class="nav-link" href="{% url 'register_teacher' %}">
-          <i class="bi bi-person-badge me-2"></i>Add Teacher</a></li>
+        <li><a class="nav-link {% block nav_teachers %}{% endblock %}" href="{% url 'teacher_list' %}">
+          <i class="bi bi-person-workspace me-2"></i>Teachers</a></li>
         <li><a class="nav-link {% block nav_classes %}{% endblock %}" href="{% url 'class_list' %}">
           <i class="bi bi-building me-2"></i>Classes</a></li>
         <li><a class="nav-link {% block nav_subjects %}{% endblock %}" href="{% url 'subject_list' %}">
@@ -69,10 +69,16 @@
       {% if user.is_staff or user.teacher %}
       <span class="sidebar-section">Academic</span>
       <ul class="nav flex-column mb-2">
+        <li><a class="nav-link {% block nav_assignments %}{% endblock %}" href="{% url 'assignment_list' %}">
+          <i class="bi bi-file-earmark-text me-2"></i>Assignments</a></li>
         <li><a class="nav-link" href="{% url 'assignment_create' %}">
           <i class="bi bi-file-earmark-plus me-2"></i>New Assignment</a></li>
+        <li><a class="nav-link {% block nav_attendance_list %}{% endblock %}" href="{% url 'attendance_list' %}">
+          <i class="bi bi-calendar3 me-2"></i>View Attendance</a></li>
         <li><a class="nav-link {% block nav_attendance %}{% endblock %}" href="{% url 'attendance_mark' %}">
           <i class="bi bi-check2-square me-2"></i>Mark Attendance</a></li>
+        <li><a class="nav-link {% block nav_marks %}{% endblock %}" href="{% url 'marks_list' %}">
+          <i class="bi bi-patch-check me-2"></i>Marks</a></li>
       </ul>
       {% endif %}
 
@@ -98,6 +104,7 @@
       <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
         <h5 class="mb-0 fw-semibold">{% block page_title %}Dashboard{% endblock %}</h5>
         <div class="d-flex align-items-center gap-2">
+          {% block top_bar_extra %}{% endblock %}
           <span class="badge bg-secondary">{{ user.get_full_name|default:user.username }}</span>
           {% if user.is_staff %}<span class="badge bg-danger">Admin</span>
           {% elif user.teacher %}<span class="badge bg-primary">Teacher</span>

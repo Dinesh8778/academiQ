@@ -134,13 +134,16 @@ class MarkSummarySerializer(serializers.ModelSerializer):
     subject_code = serializers.CharField(source='subject.code', read_only=True)
     exam_type_display = serializers.CharField(source='get_exam_type_display', read_only=True)
     percentage = serializers.FloatField(read_only=True)
+    letter_grade = serializers.CharField(source='grade', read_only=True)
+    class_rank = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Mark
         fields = [
             'subject_name', 'subject_code',
             'exam_type', 'exam_type_display',
-            'marks_obtained', 'max_marks', 'percentage', 'date',
+            'marks_obtained', 'max_marks', 'percentage',
+            'letter_grade', 'class_rank', 'date',
         ]
 
 

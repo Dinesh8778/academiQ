@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load student_extras %}
+{% block title %}Track Submissions | {{ assignment.title }}{% endblock %}
+{% block page_title %}Track Submissions | {{ assignment.title }}{% endblock %}
+{% block nav_assignments %}active{% endblock %}
+
+{% block content %}
+<div class="mb-3 d-flex justify-content-between align-items-center">
+  <div>
+    <h5 class="text-secondary mb-0">Class: {{ assignment.student_class }} &middot; Subject: {{ assignment.subject.name }}</h5>
+    <small class="text-muted">Due: {{ assignment.due_date|date:"F j, Y, g:i a" }}</small>
+  </div>
+  <a href="{% url 'assignment_list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to List</a>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <form method="post">
+      {% csrf_token %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4">Student</th>
+              <th>Reg No</th>
+              <th>Status</th>
+              <th>Submission Date</th>
+              <th>File</th>
+              <th>Grade</th>
+              <th class="pe-4">Feedback</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in students %}
+            {% with sub=submissions|get_item:s.pk %}
+            <tr>
+              <td class="ps-4 fw-semibold">{{ s.name }}</td>
+              <td>{{ s.regno }}</td>
+              <td>
+                {% if sub %}
+                <span class="badge bg-success">Submitted</span>
+                {% else %}
+                <span class="badge bg-secondary">Not Submitted</span>
+                {% endif %}
+              </td>
+              <td class="text-muted small">
+                {% if sub %}
+                {{ sub.submitted_at|date:"M j, Y, g:i a" }}
+                {% else %}
+                —
+                {% endif %}
+              </td>
+              <td>
+                {% if sub and sub.file %}
+                <a href="{{ sub.file.url }}" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-2 fw-semibold" style="font-size:0.8rem;">
+                  <i class="bi bi-file-earmark-arrow-down"></i> View File
+                </a>
+                {% else %}
+                —
+                {% endif %}
+              </td>
+              <td>
+                {% if sub %}
+                <input type="number" step="0.01" name="grade_{{ s.pk }}" class="form-control form-control-sm" style="max-width: 90px;"
+                       value="{% if sub.grade is not None %}{{ sub.grade }}{% endif %}" placeholder="Grade">
+                {% else %}
+                <input type="text" class="form-control form-control-sm" style="max-width: 90px;" disabled value="—">
+                {% endif %}
+              </td>
+              <td class="pe-4">
+                {% if sub %}
+                <input type="text" name="feedback_{{ s.pk }}" class="form-control form-control-sm"
+                       value="{% if sub.feedback %}{{ sub.feedback }}{% endif %}" placeholder="Optional feedback">
+                {% else %}
+                <input type="text" class="form-control form-control-sm" disabled value="—">
+                {% endif %}
+              </td>
+            </tr>
+            {% endwith %}
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center text-muted py-4">No students enrolled in this class.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      {% if students %}
+      <div class="card-footer bg-white border-0 py-3 text-end pe-4">
+        <button type="submit" class="btn btn-primary fw-semibold">
+          <i class="bi bi-save me-1"></i>Save Grades
+        </button>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+{% endblock %}

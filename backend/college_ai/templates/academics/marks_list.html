@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Manage Marks{% endblock %}
+{% block page_title %}Manage Marks{% endblock %}
+{% block nav_marks %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    {% if selected_class and selected_subject and selected_exam_type %}
+    <button id="askAssistantBtn" class="btn btn-outline-primary btn-sm" onclick="askAboutExam()">
+      <i class="bi bi-robot me-1"></i>Ask about this exam
+    </button>
+    {% endif %}
+  </div>
+  {% if not request.user.student_profile %}
+  <a href="{% url 'marks_bulk_add' %}" class="btn btn-primary btn-sm">
+    <i class="bi bi-file-earmark-plus me-1"></i>Bulk Enter Marks
+  </a>
+  {% endif %}
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label fw-semibold small">Department</label>
+        <select name="department_id" class="form-select form-select-sm">
+          <option value="">All Departments</option>
+          {% for dept in departments %}
+          <option value="{{ dept.pk }}" {% if selected_dept == dept.pk|stringformat:"s" %}selected{% endif %}>
+            {{ dept.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label fw-semibold small">Class</label>
+        <select name="class_id" class="form-select form-select-sm">
+          <option value="">All Classes</option>
+          {% for cls in classes %}
+          <option value="{{ cls.pk }}" {% if selected_class == cls.pk|stringformat:"s" %}selected{% endif %}>
+            {{ cls }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label fw-semibold small">Subject</label>
+        <select name="subject_id" class="form-select form-select-sm">
+          <option value="">All Subjects</option>
+          {% for s in subjects %}
+          <option value="{{ s.pk }}" {% if selected_subject == s.pk|stringformat:"s" %}selected{% endif %}>
+            {{ s.code }} - {{ s.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label fw-semibold small">Exam Type</label>
+        <select name="exam_type" class="form-select form-select-sm">
+          <option value="">All Exams</option>
+          {% for code, label in exam_types %}
+          <option value="{{ code }}" {% if selected_exam_type == code %}selected{% endif %}>
+            {{ label }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+          <i class="bi bi-filter me-1"></i>Filter
+        </button>
+        <a href="{% url 'marks_list' %}" class="btn btn-outline-secondary btn-sm">
+          Clear
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Date</th>
+            <th>Class</th>
+            <th>Student</th>
+            <th>Subject</th>
+            <th>Exam Type</th>
+            <th>Score</th>
+            <th>Percentage</th>
+            <th>Grade</th>
+            <th>Status</th>
+            <th>Class Rank</th>
+            <th class="text-end pe-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for record in page_obj %}
+        <tr>
+          <td class="ps-4 text-muted small">{{ record.date|date:"Y-m-d" }}</td>
+          <td>{{ record.student.student_class }}</td>
+          <td class="fw-semibold text-dark">{{ record.student.name }} <span class="text-muted small">({{ record.student.regno }})</span></td>
+          <td>{{ record.subject.code }}</td>
+          <td>
+            <span class="badge bg-light text-secondary border border-secondary-subtle">
+              {{ record.get_exam_type_display }}
+            </span>
+          </td>
+          <td>{{ record.marks_obtained }} / {{ record.max_marks }}</td>
+          <td class="fw-medium text-primary">{{ record.percentage }}%</td>
+          <td>
+            <strong class="text-dark">{{ record.grade }}</strong>
+          </td>
+          <td>
+            {% if record.is_pass %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Pass</span>
+            {% else %}
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Fail</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge bg-info-subtle text-info border border-info-subtle px-2.5 py-1">
+              #{{ record.class_rank }}
+            </span>
+          </td>
+          <td class="text-end pe-4">
+            <div class="d-flex justify-content-end gap-2">
+              <a href="{% url 'marks_edit' record.pk %}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form method="post" action="{% url 'marks_delete' record.pk %}" class="d-inline"
+                    onsubmit="return confirm('Are you sure you want to delete this marks record for {{ record.student.name }}?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="11" class="text-center text-muted py-5">
+            <i class="bi bi-patch-check display-4 mb-3 d-block text-secondary"></i>
+            <h5>No marks records found</h5>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% if page_obj.has_other_pages %}
+  <div class="card-footer bg-white py-3">
+    <nav>
+      <ul class="pagination pagination-sm justify-content-center mb-0">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query_params %}&{{ query_params }}{% endif %}">Previous</a>
+        </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ num }}{% if query_params %}&{{ query_params }}{% endif %}">{{ num }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query_params %}&{{ query_params }}{% endif %}">Next</a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function askAboutExam() {
+    const classId = "{{ selected_class }}";
+    const subjectId = "{{ selected_subject }}";
+    const examCode = "{{ selected_exam_type }}";
+    
+    const classSelect = document.querySelector('select[name="class_id"]');
+    const classText = classSelect && classSelect.selectedIndex >= 0 ? classSelect.options[classSelect.selectedIndex].text : "Class";
+    
+    const subjectSelect = document.querySelector('select[name="subject_id"]');
+    const subjectText = subjectSelect && subjectSelect.selectedIndex >= 0 ? subjectSelect.options[subjectSelect.selectedIndex].text : "Subject";
+    
+    const examSelect = document.querySelector('select[name="exam_type"]');
+    const examText = examSelect && examSelect.selectedIndex >= 0 ? examSelect.options[examSelect.selectedIndex].text : examCode;
+
+    const question = `Can you analyze the exam results for class ${classText} (ID: ${classId}), subject ${subjectText} (ID: ${subjectId}), exam type: ${examText} (code: ${examCode})?`;
+    
+    const chatWindow = document.getElementById('chatWindow');
+    if (chatWindow) {
+        chatWindow.style.display = 'flex';
+        chatWindow.style.flexDirection = 'column';
+    }
+    
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.value = question;
+        chatInput.focus();
+    }
+}
+</script>
+{% endblock %}

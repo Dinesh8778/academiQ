@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Manage Assignments{% endblock %}
+{% block page_title %}Manage Assignments{% endblock %}
+{% block nav_assignments %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <span></span>
+  {% if not request.user.student_profile %}
+  <a href="{% url 'assignment_create' %}" class="btn btn-primary btn-sm">
+    <i class="bi bi-file-earmark-plus me-1"></i>New Assignment
+  </a>
+  {% endif %}
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Title</th>
+            <th>Subject</th>
+            <th>Class</th>
+            <th>Due Date</th>
+            <th>Submissions</th>
+            <th>Created By</th>
+            <th class="text-end pe-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for a in assignments %}
+        <tr>
+          <td class="ps-4 fw-semibold text-dark">{{ a.title }}</td>
+          <td>{{ a.subject }}</td>
+          <td>{{ a.student_class }}</td>
+          <td class="text-muted small">{{ a.due_date|date:"F j, Y, g:i a" }}</td>
+          <td>
+            <a href="{% url 'teacher_assignment_submissions' a.pk %}" class="text-decoration-none" title="Track Submissions">
+              <span class="badge bg-light text-primary border border-primary-subtle px-2.5 py-1.5 fw-medium">
+                {{ a.submission_count }} &middot; Track
+              </span>
+            </a>
+          </td>
+          <td class="text-muted small">{{ a.created_by.user.get_full_name|default:a.created_by.user.username }}</td>
+          <td class="text-end pe-4">
+            <div class="d-flex justify-content-end gap-2">
+              <a href="{% url 'teacher_assignment_submissions' a.pk %}" class="btn btn-sm btn-outline-info" title="Track Submissions">
+                <i class="bi bi-eye-fill me-1"></i>Track
+              </a>
+              <a href="{% url 'assignment_edit' a.pk %}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form method="post" action="{% url 'assignment_delete' a.pk %}" class="d-inline"
+                    onsubmit="return confirm('Are you sure you want to delete assignment: {{ a.title }}? This will also cascade delete all student submissions for this assignment.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center text-muted py-5">
+            <i class="bi bi-file-earmark display-4 mb-3 d-block text-secondary"></i>
+            <h5>No assignments found</h5>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

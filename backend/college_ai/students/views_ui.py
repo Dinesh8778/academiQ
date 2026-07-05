@@ -40,6 +40,7 @@ class StudentCreateView(View):
         return render(request, self.template_name, {
             'classes': Class.objects.select_related('department').all(),
             'action': 'Create',
+            'form_data': {},
         })
 
     def post(self, request):
@@ -77,14 +78,33 @@ class StudentEditView(View):
         if not admin_or_teacher(request):
             return redirect('dashboard')
         student = get_object_or_404(Student, pk=pk)
+        
+        credential_logs = []
+        if request.user.is_staff and student.user:
+            from users.models import CredentialChangeLog
+            credential_logs = CredentialChangeLog.objects.filter(target_user=student.user).order_by('-timestamp')
+
+        submissions = student.submissions.select_related('assignment__subject').all()
         return render(request, self.template_name, {
             'classes': Class.objects.select_related('department').all(),
-            'student': student, 'action': 'Edit'})
+            'student': student,
+            'action': 'Edit',
+            'form_data': {},
+            'credential_logs': credential_logs,
+            'submissions': submissions
+        })
 
     def post(self, request, pk):
         if not admin_or_teacher(request):
             return redirect('dashboard')
         student = get_object_or_404(Student, pk=pk)
+
+        # 403 security check: non-admin trying to edit credentials
+        has_cred_fields = any(field in request.POST for field in ['username', 'password', 'confirm_password'])
+        if has_cred_fields and not request.user.is_staff:
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied("Only admins can modify account credentials.")
+
         student.name = request.POST.get('name', student.name).strip()
         student.student_class_id = request.POST.get('student_class', student.student_class_id)
         student.email = request.POST.get('email', '').strip() or None
@@ -92,6 +112,59 @@ class StudentEditView(View):
         student.gender = request.POST.get('gender', '') or None
         student.guardian_name = request.POST.get('guardian_name', '').strip() or None
         student.is_active = request.POST.get('is_active') == 'on'
+
+        errors = []
+        if not student.name or not student.student_class_id:
+            errors.append("Name and class are required.")
+
+        # Credentials-related validation
+        new_username = request.POST.get('username', '').strip() if 'username' in request.POST else (student.user.username if student.user else '')
+        new_password = request.POST.get('password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+        
+        if request.user.is_staff and student.user:
+            username_changed = new_username != student.user.username
+            password_changed = bool(new_password)
+            
+            if username_changed:
+                if not new_username:
+                    errors.append("Username cannot be empty.")
+                elif User.objects.exclude(pk=student.user.pk).filter(username=new_username).exists():
+                    errors.append("Username is already taken.")
+            
+            if password_changed:
+                if new_password != confirm_password:
+                    errors.append("Passwords do not match.")
+                else:
+                    try:
+                        from django.contrib.auth.password_validation import validate_password
+                        from django.core.exceptions import ValidationError
+                        validate_password(new_password, user=student.user)
+                    except ValidationError as ve:
+                        errors.extend(ve.messages)
+
+        if errors:
+            for err in errors:
+                messages.error(request, err)
+            
+            credential_logs = []
+            if request.user.is_staff and student.user:
+                from users.models import CredentialChangeLog
+                credential_logs = CredentialChangeLog.objects.filter(target_user=student.user).order_by('-timestamp')
+
+            return render(request, self.template_name, {
+                'classes': Class.objects.select_related('department').all(),
+                'student': student,
+                'form_data': request.POST,
+                'action': 'Edit',
+                'credential_logs': credential_logs
+            })
+
+        # Save credentials first
+        if request.user.is_staff and student.user:
+            from users.utils import update_user_credentials
+            update_user_credentials(request, student.user, new_username, new_password, confirm_password)
+
         student.save()
         messages.success(request, "Student updated.")
         return redirect('student_list')

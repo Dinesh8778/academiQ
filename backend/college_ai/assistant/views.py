@@ -108,6 +108,7 @@ class AssistantAskView(APIView):
             "tools_called": result["tools_called"],
             "role": role,
             "error": result["error"],
+            "draft_data": result.get("draft_data"),
         })
 
     def handle_exception(self, exc):

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Manage Teachers{% endblock %}
+{% block page_title %}Manage Teachers{% endblock %}
+{% block nav_teachers %}active{% endblock %}
+
+{% block top_bar_extra %}
+<a href="{% url 'register_teacher' %}" class="btn btn-sm btn-primary">
+  <i class="bi bi-person-plus me-1"></i>Add Teacher
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    {% if not groups %}
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+          <i class="bi bi-person-workspace display-4 mb-3 d-block text-secondary"></i>
+          <h5>No teachers found</h5>
+          <p class="small mb-0">Get started by creating a teacher profile.</p>
+        </div>
+      </div>
+    {% else %}
+      {% for item in groups %}
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h5 class="card-title mb-0 fw-semibold text-primary">
+              {% if item.department %}
+                {{ item.department.name }} <span class="badge bg-light text-secondary ms-2 small">{{ item.department.code }}</span>
+              {% else %}
+                Unassigned Department
+              {% endif %}
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-4">Teacher ID</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th class="text-end pe-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for t in item.teachers %}
+                    <tr>
+                      <td class="ps-4 fw-medium text-dark">{{ t.teacher_id }}</td>
+                      <td>{{ t.user.get_full_name|default:t.user.username }}</td>
+                      <td>{{ t.user.email|default:"—" }}</td>
+                      <td class="text-end pe-4">
+                        <div class="d-flex justify-content-end gap-2">
+                          <a href="{% url 'teacher_edit' t.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                          </a>
+                          <form method="post" action="{% url 'teacher_delete' t.pk %}" class="d-inline" 
+                                onsubmit="return confirm('Are you sure you want to delete this teacher? This will also remove the login account.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

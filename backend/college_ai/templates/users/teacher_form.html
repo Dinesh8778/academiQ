@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Teacher{% endblock %}
+{% block page_title %}{{ action }} Teacher{% endblock %}
+{% block nav_teachers %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <form method="post">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Teacher ID <span class="text-danger">*</span></label>
+              <input type="text" name="teacher_id" class="form-control"
+                     value="{% if teacher %}{{ teacher.teacher_id }}{% else %}{{ form_data.teacher_id|default:'' }}{% endif %}"
+                     required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">First Name</label>
+              <input type="text" name="first_name" class="form-control"
+                     value="{% if teacher %}{{ teacher.user.first_name }}{% else %}{{ form_data.first_name|default:'' }}{% endif %}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Last Name</label>
+              <input type="text" name="last_name" class="form-control"
+                     value="{% if teacher %}{{ teacher.user.last_name }}{% else %}{{ form_data.last_name|default:'' }}{% endif %}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Email</label>
+              <input type="email" name="email" class="form-control"
+                     value="{% if teacher %}{{ teacher.user.email }}{% else %}{{ form_data.email|default:'' }}{% endif %}">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Department</label>
+              <select name="department" class="form-select">
+                <option value="">— Select Department —</option>
+                {% for dept in departments %}
+                <option value="{{ dept.pk }}"
+                  {% if teacher.department_id == dept.pk or form_data.department == dept.pk|stringformat:"s" %}
+                    selected{% endif %}>
+                  {{ dept.name }} ({{ dept.code }})
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          {% if request.user.is_staff and teacher and teacher.user %}
+          <div class="card mt-4 border-0 shadow-sm bg-light">
+            <div class="card-body">
+              <h5 class="fw-semibold mb-3">Account Credentials Settings</h5>
+              <hr>
+              <div class="row g-3">
+                <div class="col-md-12">
+                  <label class="form-label fw-semibold">Username</label>
+                  <input type="text" name="username" class="form-control" value="{{ teacher.user.username }}" required autocomplete="off">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Set New Password</label>
+                  <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current" autocomplete="new-password">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Confirm New Password</label>
+                  <input type="password" name="confirm_password" class="form-control" placeholder="Leave blank to keep current" autocomplete="new-password">
+                </div>
+              </div>
+              
+              {% if credential_logs %}
+              <div class="mt-4">
+                <h6 class="fw-semibold text-secondary">Credential Change History</h6>
+                <div class="table-responsive">
+                  <table class="table table-sm table-striped border">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Changed By</th>
+                        <th>Change Type</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for log in credential_logs %}
+                      <tr>
+                        <td>{{ log.timestamp|date:"Y-m-d H:i" }}</td>
+                        <td>{{ log.admin.username }}</td>
+                        <td>{{ log.action_type }}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary fw-semibold">
+              <i class="bi bi-save me-1"></i>{{ action }}
+            </button>
+            <a href="{% url 'teacher_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

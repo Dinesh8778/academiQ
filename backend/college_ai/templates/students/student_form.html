@@ -14,13 +14,13 @@
             <div class="col-md-6">
               <label class="form-label fw-semibold">Register Number <span class="text-danger">*</span></label>
               <input type="text" name="regno" class="form-control"
-                     value="{{ student.regno|default:form_data.regno|default:'' }}"
+                     value="{% if student %}{{ student.regno }}{% else %}{{ form_data.regno }}{% endif %}"
                      {% if student %}readonly{% endif %} required>
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
               <input type="text" name="name" class="form-control"
-                     value="{{ student.name|default:form_data.name|default:'' }}" required>
+                     value="{% if student %}{{ student.name }}{% else %}{{ form_data.name }}{% endif %}" required>
             </div>
             <div class="col-12">
               <label class="form-label fw-semibold">Class <span class="text-danger">*</span></label>
@@ -28,8 +28,11 @@
                 <option value="">— Select Class —</option>
                 {% for cls in classes %}
                 <option value="{{ cls.pk }}"
-                  {% if student.student_class_id == cls.pk or form_data.student_class == cls.pk|stringformat:"s" %}
-                    selected{% endif %}>
+                  {% if student %}
+                    {% if student.student_class_id == cls.pk %}selected{% endif %}
+                  {% else %}
+                    {% if form_data.student_class|stringformat:"s" == cls.pk|stringformat:"s" %}selected{% endif %}
+                  {% endif %}>
                   {{ cls }}
                 </option>
                 {% endfor %}
@@ -38,26 +41,41 @@
             <div class="col-md-6">
               <label class="form-label fw-semibold">Email</label>
               <input type="email" name="email" class="form-control"
-                     value="{{ student.email|default:form_data.email|default:'' }}">
+                     value="{% if student %}{{ student.email }}{% else %}{{ form_data.email }}{% endif %}">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold">Phone</label>
               <input type="text" name="phone" class="form-control"
-                     value="{{ student.phone|default:form_data.phone|default:'' }}">
+                     value="{% if student %}{{ student.phone }}{% else %}{{ form_data.phone }}{% endif %}">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold">Gender</label>
               <select name="gender" class="form-select">
                 <option value="">— Select —</option>
-                <option value="M" {% if student.gender == "M" %}selected{% endif %}>Male</option>
-                <option value="F" {% if student.gender == "F" %}selected{% endif %}>Female</option>
-                <option value="O" {% if student.gender == "O" %}selected{% endif %}>Other</option>
+                <option value="M"
+                  {% if student %}
+                    {% if student.gender == "M" %}selected{% endif %}
+                  {% else %}
+                    {% if form_data.gender == "M" %}selected{% endif %}
+                  {% endif %}>Male</option>
+                <option value="F"
+                  {% if student %}
+                    {% if student.gender == "F" %}selected{% endif %}
+                  {% else %}
+                    {% if form_data.gender == "F" %}selected{% endif %}
+                  {% endif %}>Female</option>
+                <option value="O"
+                  {% if student %}
+                    {% if student.gender == "O" %}selected{% endif %}
+                  {% else %}
+                    {% if form_data.gender == "O" %}selected{% endif %}
+                  {% endif %}>Other</option>
               </select>
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold">Guardian Name</label>
               <input type="text" name="guardian_name" class="form-control"
-                     value="{{ student.guardian_name|default:'' }}">
+                     value="{% if student %}{{ student.guardian_name }}{% else %}{{ form_data.guardian_name }}{% endif %}">
             </div>
             {% if student %}
             <div class="col-md-6 d-flex align-items-end">
@@ -69,6 +87,56 @@
             </div>
             {% endif %}
           </div>
+
+          {% if request.user.is_staff and student and student.user %}
+          <div class="card mt-4 border-0 shadow-sm bg-light">
+            <div class="card-body">
+              <h5 class="fw-semibold mb-3">Account Credentials Settings</h5>
+              <hr>
+              <div class="row g-3">
+                <div class="col-md-12">
+                  <label class="form-label fw-semibold">Username</label>
+                  <input type="text" name="username" class="form-control" value="{{ student.user.username }}" required autocomplete="off">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Set New Password</label>
+                  <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current" autocomplete="new-password">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Confirm New Password</label>
+                  <input type="password" name="confirm_password" class="form-control" placeholder="Leave blank to keep current" autocomplete="new-password">
+                </div>
+              </div>
+              
+              {% if credential_logs %}
+              <div class="mt-4">
+                <h6 class="fw-semibold text-secondary">Credential Change History</h6>
+                <div class="table-responsive">
+                  <table class="table table-sm table-striped border">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Changed By</th>
+                        <th>Change Type</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for log in credential_logs %}
+                      <tr>
+                        <td>{{ log.timestamp|date:"Y-m-d H:i" }}</td>
+                        <td>{{ log.admin.username }}</td>
+                        <td>{{ log.action_type }}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+
           <div class="d-flex gap-2 mt-4">
             <button type="submit" class="btn btn-primary fw-semibold">
               <i class="bi bi-save me-1"></i>{{ action }}
@@ -78,6 +146,39 @@
         </form>
       </div>
     </div>
+
+    {% if action == 'Edit' and submissions %}
+    <div class="card mt-4 border-0 shadow-sm">
+      <div class="card-body p-4">
+        <h5 class="fw-semibold mb-3">Assignment Submissions & Grades</h5>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Assignment</th>
+                <th>Subject</th>
+                <th>Submitted At</th>
+                <th class="text-end">Grade</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in submissions %}
+              <tr>
+                <td class="fw-semibold">{{ s.assignment.title }}</td>
+                <td>{{ s.assignment.subject.name }}</td>
+                <td class="text-muted small">{{ s.submitted_at|date:"d M Y, g:i a" }}</td>
+                <td class="text-end fw-bold {% if s.grade is not None %}text-success{% else %}text-muted{% endif %}">
+                  {% if s.grade is not None %}{{ s.grade }}{% else %}Not graded{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
   </div>
 </div>
 {% endblock %}

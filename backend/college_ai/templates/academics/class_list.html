@@ -4,6 +4,14 @@
 {% block nav_classes %}active{% endblock %}
 
 {% block content %}
+{% if request.user.is_staff %}
+<div class="mb-3 text-end">
+  <a href="{% url 'teacher_subject_class_list' %}" class="btn btn-outline-primary btn-sm">
+    <i class="bi bi-people me-1"></i>Manage Teacher Subject Assignments
+  </a>
+</div>
+{% endif %}
+
 <div class="row g-4">
   <div class="col-md-8">
     <div class="card border-0 shadow-sm">
@@ -25,7 +33,11 @@
             <td>{{ c.section }}</td>
             <td class="text-muted small">{{ c.academic_year }}</td>
             <td class="text-muted small">
-              {{ c.adviser.user.get_full_name|default:c.adviser.user.username|default:"—" }}
+              {% if c.adviser %}
+                {{ c.adviser.user.get_full_name|default:c.adviser.user.username }}
+              {% else %}
+                —
+              {% endif %}
             </td>
             <td class="text-end">
               <a href="{% url 'class_edit' c.pk %}" class="btn btn-outline-secondary btn-sm">

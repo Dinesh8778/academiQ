@@ -290,3 +290,92 @@ class TestRoleDetection:
         assert 'get_department_stats' in names
         assert 'get_at_risk_students' in names
         assert 'get_class_roster' in names
+
+
+@pytest.mark.django_db
+def test_assistant_write_intent_fallback(admin_user):
+    from assistant.groq_client import call_groq
+    response = call_groq(admin_user, "I want to add a teacher")
+    assert "I can't create or edit records" in response["answer"]
+    assert "Add Teacher" in response["answer"]
+
+    response2 = call_groq(admin_user, "can you delete a class?")
+    assert "I can't create or edit records" in response2["answer"]
+    assert "Add Class" in response2["answer"]
+
+
+@pytest.mark.django_db
+class TestExamAnalysisToolIsolation:
+
+    def test_teacher_allowed_exam_analysis_on_own_class(self, teacher_user, cls, subject):
+        """Teacher can get exam analysis for their assigned class and subject."""
+        from assistant.tools import get_exam_analysis
+        
+        # Create some mark data
+        u1 = User.objects.create_user(username='stud_1', password='pwd')
+        s1 = Student.objects.create(user=u1, name='Student One', regno='S1',
+                                    student_class=cls, is_active=True)
+        Mark.objects.create(student=s1, subject=subject, exam_type='final',
+                            marks_obtained=90, max_marks=100, date='2025-09-10')
+
+        result = get_exam_analysis(teacher_user, class_id=cls.pk, subject_id=subject.pk, exam_type='final')
+        assert 'error' not in result
+        assert result['average'] == 90.0
+        assert result['highest'] == 90.0
+        assert result['pass_rate'] == 100.0
+
+    def test_teacher_denied_exam_analysis_on_other_class(self, other_teacher_user, cls, subject):
+        """Teacher asking about an exam for a class they do not teach must be denied."""
+        from assistant.tools import get_exam_analysis
+        result = get_exam_analysis(other_teacher_user, class_id=cls.pk, subject_id=subject.pk, exam_type='final')
+        assert result.get('error') == 'ACCESS_DENIED'
+
+    def test_admin_allowed_exam_analysis_any_class(self, admin_user, cls, subject):
+        """Admins can call get_exam_analysis for any class/subject combination without assignment."""
+        from assistant.tools import get_exam_analysis
+        u1 = User.objects.create_user(username='stud_2', password='pwd')
+        s1 = Student.objects.create(user=u1, name='Student Two', regno='S2',
+                                    student_class=cls, is_active=True)
+        Mark.objects.create(student=s1, subject=subject, exam_type='final',
+                            marks_obtained=75, max_marks=100, date='2025-09-10')
+
+        result = get_exam_analysis(admin_user, class_id=cls.pk, subject_id=subject.pk, exam_type='final')
+        assert 'error' not in result
+        assert result['average'] == 75.0
+
+    def test_teacher_denied_department_exam_comparison(self, teacher_user):
+        """Teachers cannot run the admin-only department comparison tool."""
+        from assistant.tools import get_department_exam_comparison
+        result = get_department_exam_comparison(teacher_user, exam_type='final')
+        assert result.get('error') == 'ACCESS_DENIED'
+
+    def test_admin_allowed_department_exam_comparison(self, admin_user, dept, other_dept, cls, other_cls, subject):
+        """Admin can run get_department_exam_comparison with system-wide stats."""
+        from assistant.tools import get_department_exam_comparison
+        
+        # Create student and mark for dept
+        u1 = User.objects.create_user(username='stud_3', password='pwd')
+        s1 = Student.objects.create(user=u1, name='Student Three', regno='S3',
+                                    student_class=cls, is_active=True)
+        Mark.objects.create(student=s1, subject=subject, exam_type='final',
+                            marks_obtained=80, max_marks=100, date='2025-09-10')
+
+        # Create student and mark for other_dept
+        other_subject = Subject.objects.create(name='Other Sub', code='OTH888', department=other_dept)
+        u2 = User.objects.create_user(username='stud_4', password='pwd')
+        s2 = Student.objects.create(user=u2, name='Student Four', regno='S4',
+                                    student_class=other_cls, is_active=True)
+        Mark.objects.create(student=s2, subject=other_subject, exam_type='final',
+                            marks_obtained=60, max_marks=100, date='2025-09-10')
+
+        result = get_department_exam_comparison(admin_user, exam_type='final')
+        assert 'error' not in result
+        comparison = result['comparison']
+        
+        # Assert comparison results ordered correctly
+        assert len(comparison) >= 2
+        assert comparison[0]['department_name'] == dept.name
+        assert comparison[0]['average_percentage'] == 80.0
+        assert comparison[1]['department_name'] == other_dept.name
+        assert comparison[1]['average_percentage'] == 60.0
+

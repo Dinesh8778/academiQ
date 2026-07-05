@@ -140,3 +140,15 @@ class TestReportCard:
         student = student_user.student_profile
         response = admin_client.get(self._url(student))
         assert response.status_code == 200
+
+    def test_report_card_grade_and_class_rank(self, student_client, student_user, subject):
+        student = student_user.student_profile
+        Mark.objects.create(
+            student=student, subject=subject,
+            exam_type='final', marks_obtained=95, max_marks=100, date='2025-09-10'
+        )
+        response = student_client.get(self._url(student))
+        data = response.json()
+        assert len(data['marks']) == 1
+        assert data['marks'][0]['letter_grade'] == 'A'
+        assert data['marks'][0]['class_rank'] == 1

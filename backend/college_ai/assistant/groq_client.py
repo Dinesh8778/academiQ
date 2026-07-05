@@ -83,6 +83,27 @@ def call_groq(user, message: str, conversation_history: Optional[list] = None) -
     role = get_user_role(user)
     tools = get_tools_for_role(role)
 
+    # Intercept write/create/delete/update requests immediately
+    message_lower = message.lower()
+    write_keywords = ["add", "create", "delete", "remove", "update", "edit", "insert", "modify", "register"]
+    import re
+    has_write_intent = any(re.search(r'\b' + re.escape(kw) + r'\b', message_lower) for kw in write_keywords)
+    if has_write_intent and "draft" not in message_lower:
+        element = "Teacher"
+        if "student" in message_lower:
+            element = "Student"
+        elif "class" in message_lower:
+            element = "Class"
+        elif "department" in message_lower:
+            element = "Department"
+        elif "subject" in message_lower:
+            element = "Subject"
+        return {
+            "answer": f"I can't create or edit records — I can only answer questions about existing students, teachers, attendance, and grades. Try the 'Add {element}' button on your dashboard instead.",
+            "tools_called": [],
+            "error": None,
+        }
+
     messages = [{"role": "system", "content": get_system_prompt(role)}]
     if conversation_history:
         messages.extend(conversation_history[-6:])  # keep last 3 exchanges
@@ -103,6 +124,7 @@ def call_groq(user, message: str, conversation_history: Optional[list] = None) -
         client = _get_client()
         model = settings.GROQ_MODEL
         tools_called = []
+        draft_data = None
 
         # ------------------------------------------------------------------
         # Round 1: Send message + tool definitions to Groq
@@ -150,6 +172,10 @@ def call_groq(user, message: str, conversation_history: Optional[list] = None) -
                 tool_result = dispatch_tool_call(user, fn_name, fn_args)
                 tools_called.append(fn_name)
 
+                # Capture draft details if a tool proposes a write
+                if isinstance(tool_result, dict) and tool_result.get("action") == "propose_draft":
+                    draft_data = tool_result
+
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tool_call.id,
@@ -172,6 +198,7 @@ def call_groq(user, message: str, conversation_history: Optional[list] = None) -
         return {
             "answer": answer,
             "tools_called": tools_called,
+            "draft_data": draft_data,
             "error": None,
         }
 
@@ -179,5 +206,6 @@ def call_groq(user, message: str, conversation_history: Optional[list] = None) -
         return {
             "answer": "I encountered an error processing your request. Please try again.",
             "tools_called": [],
+            "draft_data": None,
             "error": str(e),
         }
