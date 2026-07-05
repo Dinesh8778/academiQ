@@ -74,44 +74,45 @@ DRF REST API  →  drf-spectacular Swagger UI
 ```
 academiQ/
 │
-├── college_ai/             ← Settings, root urls, wsgi
-├── users/                  ← Teacher model, auth, permissions, credential mgmt
-├── students/               ← Student model, CRUD views
-├── academics/              ← Department, Subject, Class, Assignment,
-│                             Submission, Mark, TeacherSubjectClass
-├── attendance/             ← Attendance model, bulk-mark, list/delete views
-├── ai_engine/              ← At-risk prediction (scikit-learn, joblib)
-├── assistant/              ← Groq-based conversational AI assistant
-├── notifications/          ← Anomaly detection + notification system
-├── templates/              ← All Django templates (Bootstrap 5)
-│   ├── base.html
-│   ├── auth/
-│   ├── dashboard/
-│   ├── academics/
-│   ├── students/
-│   └── notifications/
-├── static/                 ← Project-level static files
+├── backend/
+│   └── college_ai/                 ← Django project root
+│       ├── college_ai/             ← Settings, root urls, wsgi
+│       ├── users/                  ← Teacher model, auth, permissions, credential mgmt
+│       ├── students/               ← Student model, CRUD views
+│       ├── academics/              ← Department, Subject, Class, Assignment,
+│       │                             Submission, Mark, TeacherSubjectClass
+│       ├── attendance/             ← Attendance model, bulk-mark, list/delete views
+│       ├── ai_engine/              ← At-risk prediction (scikit-learn, joblib)
+│       ├── assistant/              ← Groq-based conversational AI assistant
+│       ├── notifications/          ← Anomaly detection + notification system
+│       ├── templates/              ← All Django templates (Bootstrap 5)
+│       │   ├── base.html
+│       │   ├── auth/
+│       │   ├── dashboard/
+│       │   ├── academics/
+│       │   ├── students/
+│       │   └── notifications/
+│       └── static/                 ← Project-level static files
+│
 ├── requirements.txt
 └── README.md
 ```
 
-> **Note:** There is no top-level `frontend/` directory. All templates live inside
-> `templates/` and are served directly by Django.
-> `TEMPLATES['DIRS']` and `STATICFILES_DIRS` both point directly in the project root.
+> **Note:** There is no top-level `frontend/` directory. All templates live inside `backend/college_ai/templates/` and are served directly by Django. `TEMPLATES['DIRS']` and `STATICFILES_DIRS` both point inside `backend/college_ai/`.
 
 ---
 
 ## Technology Stack
 
-| Layer         | Technology                                                 |
-| ------------- | ----------------------------------------------------------- |
-| Backend       | Python 3.12, Django 5.x                                     |
-| REST API      | Django REST Framework 3.16, drf-spectacular (Swagger)       |
-| Auth          | Django session auth + JWT (djangorestframework-simplejwt)   |
-| Frontend      | Django templates + Bootstrap 5 (CDN)                        |
-| Database      | SQLite (dev), PostgreSQL (prod-ready)                       |
-| ML / AI       | scikit-learn, pandas, numpy, joblib                          |
-| Conversational AI | Groq API (`llama-3.3-70b-versatile`) with tool-calling  |
+| Layer             | Technology                                                 |
+| ----------------- | -----------------------------------------------------------|
+| Backend           | Python 3.12, Django 5.x                                    |
+| REST API          | Django REST Framework 3.16, drf-spectacular (Swagger)      |
+| Auth              | Django session auth + JWT (djangorestframework-simplejwt)  |
+| Frontend          | Django templates + Bootstrap 5 (CDN)                       |
+| Database          | SQLite (dev), PostgreSQL (prod-ready)                      |
+| ML / AI           | scikit-learn, pandas, numpy, joblib                        |
+| Conversational AI | Groq API (`llama-3.3-70b-versatile`) with tool-calling     |
 
 ---
 
@@ -237,6 +238,7 @@ venv\Scripts\activate          # Windows
 pip install -r requirements.txt
 
 # Configure environment
+cd backend/college_ai
 cp .env.example .env
 # Edit .env — set SECRET_KEY, DEBUG=True, ALLOWED_HOSTS=127.0.0.1,localhost,
 # and GROQ_API_KEY (required for the AI assistant feature)
@@ -269,31 +271,32 @@ Open **http://127.0.0.1:8000/** — redirects to login or the correct role-based
 
 ## Key URLs
 
-| URL                                 | Description                              |
-| ------------------------------------ | ----------------------------------------- |
-| `/`                                  | Redirects to dashboard or login          |
-| `/auth/login/`                       | Login page                               |
-| `/auth/dashboard/`                   | Role-based dashboard redirect            |
-| `/manage/students/`                  | Student management (admin/teacher)       |
-| `/manage/teachers/`                  | Teacher management, grouped by department|
-| `/manage/classes/`                   | Class management (admin)                 |
-| `/manage/subjects/`                  | Subject management (admin)               |
-| `/manage/departments/`               | Department management (admin)            |
-| `/manage/assignments/`               | Assignment management                    |
-| `/manage/attendance/`                | Attendance records list                  |
-| `/manage/marks/`                     | Marks management and bulk entry          |
-| `/teacher/attendance/mark/`          | Bulk attendance marking                  |
-| `/teacher/assignments/<id>/submissions/` | Submission tracking + grading         |
+| URL                                 | Description                                  |
+| ------------------------------------ | --------------------------------------------|
+| `/`                                  | Redirects to dashboard or login             |
+| `/auth/login/`                       | Login page                                  |
+| `/auth/dashboard/`                   | Role-based dashboard redirect               |
+| `/manage/students/`                  | Student management (admin/teacher)          |
+| `/manage/teachers/`                  | Teacher management, grouped by department   |
+| `/manage/classes/`                   | Class management (admin)                    |
+| `/manage/subjects/`                  | Subject management (admin)                  |
+| `/manage/departments/`               | Department management (admin)               |
+| `/manage/assignments/`               | Assignment management                       | 
+| `/manage/attendance/`                | Attendance records list                     |
+| `/manage/marks/`                     | Marks management and bulk entry             |
+| `/teacher/attendance/mark/`          | Bulk attendance marking                     |
+| `/teacher/assignments/<id>/submissions/` | Submission tracking + grading           |
 | `/api/ai/risk-scores/`               | At-risk student predictions (teacher/admin) |
-| `/api/assistant/ask/`                | Conversational AI assistant endpoint     |
-| `/api/docs/`                         | Swagger UI (full REST API reference)     |
-| `/admin/`                            | Django admin panel                       |
+| `/api/assistant/ask/`                | Conversational AI assistant endpoint        |
+| `/api/docs/`                         | Swagger UI (full REST API reference)        |
+| `/admin/`                            | Django admin panel                          |
 
 ---
 
 ## Running Tests
 
 ```bash
+cd backend/college_ai
 python -m pytest tests/ -v
 ```
 
