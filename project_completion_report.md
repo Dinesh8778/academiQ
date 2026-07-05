@@ -18,11 +18,11 @@ The fundamental Django project setup has been completed, and core database model
 
 | Module / Layer | Completion % | Status | Notes |
 | :--- | :--- | :--- | :--- |
-| **Backend Scaffolding** | 90% | Finished | Django project, app integration, settings configured, and [db.sqlite3](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/backend/college_ai/db.sqlite3) initialized. |
+| **Backend Scaffolding** | 90% | Finished | Django project, app integration, settings configured, and [db.sqlite3](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/db.sqlite3) initialized. |
 | **Database Schema** | 75% | In Progress | Core models exist for users, students, academics, and attendance. **Missing Assignment or Submission models.** |
 | **Admin Administration Panel** | 90% | Finished | Default Django admin panel maps perfectly to existing database models. |
-| **Backend Business Logic** | 0% | Not Started | All views ([views.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/backend/college_ai/users/views.py)) are blank templates; no custom endpoints or URLs exist. |
-| **Frontend/UI Layer** | 85% | In Progress | Django templates + Bootstrap 5 live inside `backend/college_ai/templates/`. The top-level `frontend/` directory has been removed — it was never used. |
+| **Backend Business Logic** | 0% | Not Started | All views ([views.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/users/views.py)) are blank templates; no custom endpoints or URLs exist. |
+| **Frontend/UI Layer** | 85% | In Progress | Django templates + Bootstrap 5 live inside `templates/`. The top-level `frontend/` directory has been removed — it was never used. |
 | **AI Analytics Module** | 0% | Not Started | The `ai-module` directory in the root is completely empty. |
 | **Project Documentation**| 35% | In Progress | [README.md](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/README.md) is well written, but the `docs` folder itself is completely empty. |
 
@@ -38,22 +38,20 @@ ai-student-management-system/
 ├── docs/                   📂 [EMPTY] - Placeholder for architectural documentation
 ├── venv/                   📂 Python Virtual Environment
 ├── README.md               📄 System architecture, schema outline, and installation docs
-└── backend/
-    └── college_ai/         📂 Django Main Project root
-        ├── db.sqlite3      📄 SQLite Database
-        ├── manage.py       📄 Django management script
-        ├── templates/      📂 All Django templates (Bootstrap 5)
-        ├── static/         📂 Project-level static files
-        ├── college_ai/     📂 Core Config Folder (settings.py, urls.py, wsgi.py)
-        ├── users/          📂 Teacher Profiles + Auth views + Permissions
-        ├── students/       📂 Student Information System + CRUD views
-        ├── academics/      📂 Academic Structures + Assignment/Mark/Submission
-        └── attendance/     📂 Attendance Tracking Module
+├── db.sqlite3              📄 SQLite Database
+├── manage.py               📄 Django management script
+├── templates/              📂 All Django templates (Bootstrap 5)
+├── static/                 📂 Project-level static files
+├── college_ai/             📂 Core Config Folder (settings.py, urls.py, wsgi.py)
+├── users/                  📂 Teacher Profiles + Auth views + Permissions
+├── students/               📂 Student Information System + CRUD views
+├── academics/              📂 Academic Structures + Assignment/Mark/Submission
+└── attendance/             📂 Attendance Tracking Module
 ```
 
 > **Note:** The `frontend/` directory that previously existed at the project root
 > has been **deleted**. It was never referenced by Django. All templates are served
-> from `backend/college_ai/templates/` as configured in `settings.py`.
+> from `templates/` as configured in `settings.py`.
 
 ---
 
@@ -61,13 +59,13 @@ ai-student-management-system/
 
 ### 1. Database Schema & Models
 * **Implemented:**
-  * **Teacher ([users/models.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/backend/college_ai/users/models.py))**: One-to-one mapping with Django's built-in `User` authentication system; stores basic identifiers like `teacher_id` and is linked to a [Department](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/backend/college_ai/academics/models.py#4-17).
-  * **Student ([students/models.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/backend/college_ai/students/models.py))**: Stores student records (`name`, unique register number `regno`) linked to a class.
-  * **Academics ([academics/models.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/backend/college_ai/academics/models.py))**:
-    * [Department](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/backend/college_ai/academics/models.py#4-17) (Name, HOD link to Teacher).
-    * [Subject](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/backend/college_ai/academics/models.py#19-30) (Name, unique Code, linked to Department).
-    * [Class](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/backend/college_ai/academics/models.py#32-51) (Department, Year, Section, Class Advisor link to Teacher).
-  * **Attendance ([attendance/models.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/backend/college_ai/attendance/models.py))**: Standard tracking record representing a student's attendance on a given day/subject.
+  * **Teacher ([users/models.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/users/models.py))**: One-to-one mapping with Django's built-in `User` authentication system; stores basic identifiers like `teacher_id` and is linked to a [Department](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/academics/models.py#4-17).
+  * **Student ([students/models.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/students/models.py))**: Stores student records (`name`, unique register number `regno`) linked to a class.
+  * **Academics ([academics/models.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/academics/models.py))**:
+    * [Department](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/academics/models.py#4-17) (Name, HOD link to Teacher).
+    * [Subject](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/academics/models.py#19-30) (Name, unique Code, linked to Department).
+    * [Class](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/academics/models.py#32-51) (Department, Year, Section, Class Advisor link to Teacher).
+  * **Attendance ([attendance/models.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/attendance/models.py))**: Standard tracking record representing a student's attendance on a given day/subject.
 * **⚠️ Missing Database Components:**
   * **Assignments & Submissions**: Though the [README.md](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/README.md) details "distributing assignments" and "submitting work" as key features, no models currently exist to store assignments, attachment links, or student submission logs.
   * **Authentication Groups/Roles**: Standard base model handles authentication, but specific role separation (e.g., student vs. teacher dashboards authorization checks) needs custom middleware or group mappings.
@@ -76,8 +74,8 @@ ai-student-management-system/
 * **Implemented:**
   * Django Admin Panel mapping is operational. You can log into `/admin` to add, update, and delete classes, departments, teachers, students, and attendance sheets.
 * **❌ Missing view logic:**
-  * Every app's [views.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/backend/college_ai/users/views.py) is empty (only contains `from django.shortcuts import render`).
-  * [college_ai/urls.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/backend/college_ai/college_ai/urls.py) does not contain any app paths or routing configurations except standard `/admin`.
+  * Every app's [views.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/users/views.py) is empty (only contains `from django.shortcuts import render`).
+  * [college_ai/urls.py](file:///c:/Users/user/Documents/Project/PROJECTS/ai-student-management-system/college_ai/urls.py) does not contain any app paths or routing configurations except standard `/admin`.
   * No custom templates, serializers, or REST API endpoints are created yet to serve the client dashboard.
 
 ---
@@ -103,7 +101,7 @@ If you would like to begin completing this project, we should proceed in the fol
    * API/View to view attendance presence rate (percentage of classes present).
 
 ### Phase 3: Frontend Integration
-1. Templates live in `backend/college_ai/templates/` (already implemented with Bootstrap 5).
+1. Templates live in `templates/` (already implemented with Bootstrap 5).
 2. Dashboards, CRUD pages, attendance marking page, and assignment forms are complete.
 3. Run `python manage.py runserver` and visit http://127.0.0.1:8000/.
 

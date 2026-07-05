@@ -2,7 +2,7 @@
 
 ## Location
 
-This module lives at `backend/college_ai/ai_engine/` as a Django app.
+This module lives at `ai_engine/` as a Django app.
 The top-level `ai-module/` folder in the project root is an empty placeholder
 and is **not used** by Django.
 

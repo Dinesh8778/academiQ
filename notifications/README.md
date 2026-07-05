@@ -21,20 +21,20 @@ Use **Windows Task Scheduler** to run a daily task:
 *   **Program/script**: `powershell.exe`
 *   **Arguments** (assuming the project is at `C:\Users\user\Documents\Project\PROJECTS\ai-student-management-system`):
     ```powershell
-    -ExecutionPolicy Bypass -Command "& 'C:\Users\user\Documents\Project\PROJECTS\ai-student-management-system\venv\Scripts\python.exe' 'C:\Users\user\Documents\Project\PROJECTS\ai-student-management-system\backend\college_ai\manage.py' detect_anomalies"
+    -ExecutionPolicy Bypass -Command "& 'C:\Users\user\Documents\Project\PROJECTS\ai-student-management-system\venv\Scripts\python.exe' 'C:\Users\user\Documents\Project\PROJECTS\ai-student-management-system\manage.py' detect_anomalies"
     ```
-*   **Start in** (Optional): `C:\Users\user\Documents\Project\PROJECTS\ai-student-management-system\backend\college_ai`
+*   **Start in** (Optional): `C:\Users\user\Documents\Project\PROJECTS\ai-student-management-system`
 *   **Trigger**: Daily at 01:00 AM.
 
 Alternatively, via Command Prompt (Admin):
 ```cmd
-schtasks /create /tn "AI_Student_Management_Anomaly_Detection" /tr "C:\Users\user\Documents\Project\PROJECTS\ai-student-management-system\venv\Scripts\python.exe C:\Users\user\Documents\Project\PROJECTS\ai-student-management-system\backend\college_ai\manage.py detect_anomalies" /sc daily /st 01:00
+schtasks /create /tn "AI_Student_Management_Anomaly_Detection" /tr "C:\Users\user\Documents\Project\PROJECTS\ai-student-management-system\venv\Scripts\python.exe C:\Users\user\Documents\Project\PROJECTS\ai-student-management-system\manage.py detect_anomalies" /sc daily /st 01:00
 ```
 
 ### 2. Linux (Production environments)
 Add a crontab entry for the web user:
 ```bash
-0 1 * * * /home/user/project/venv/bin/python /home/user/project/backend/college_ai/manage.py detect_anomalies >> /home/user/project/backend/college_ai/logs/anomalies.log 2>&1
+0 1 * * * /home/user/project/venv/bin/python /home/user/project/manage.py detect_anomalies >> /home/user/project/logs/anomalies.log 2>&1
 ```
 
 ### 3. Future Upgrade Path: Celery Beat

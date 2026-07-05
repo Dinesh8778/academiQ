@@ -74,31 +74,30 @@ DRF REST API  →  drf-spectacular Swagger UI
 ```
 academiQ/
 │
-├── backend/
-│   └── college_ai/                 ← Django project root
-│       ├── college_ai/             ← Settings, root urls, wsgi
-│       ├── users/                  ← Teacher model, auth, permissions, credential mgmt
-│       ├── students/               ← Student model, CRUD views
-│       ├── academics/              ← Department, Subject, Class, Assignment,
-│       │                             Submission, Mark, TeacherSubjectClass
-│       ├── attendance/             ← Attendance model, bulk-mark, list/delete views
-│       ├── ai_engine/              ← At-risk prediction (scikit-learn, joblib)
-│       ├── assistant/              ← Groq-based conversational AI assistant
-│       ├── notifications/          ← Anomaly detection + notification system
-│       ├── templates/              ← All Django templates (Bootstrap 5)
-│       │   ├── base.html
-│       │   ├── auth/
-│       │   ├── dashboard/
-│       │   ├── academics/
-│       │   ├── students/
-│       │   └── notifications/
-│       └── static/                 ← Project-level static files
-│
+├── college_ai/             ← Settings, root urls, wsgi
+├── users/                  ← Teacher model, auth, permissions, credential mgmt
+├── students/               ← Student model, CRUD views
+├── academics/              ← Department, Subject, Class, Assignment,
+│                             Submission, Mark, TeacherSubjectClass
+├── attendance/             ← Attendance model, bulk-mark, list/delete views
+├── ai_engine/              ← At-risk prediction (scikit-learn, joblib)
+├── assistant/              ← Groq-based conversational AI assistant
+├── notifications/          ← Anomaly detection + notification system
+├── templates/              ← All Django templates (Bootstrap 5)
+│   ├── base.html
+│   ├── auth/
+│   ├── dashboard/
+│   ├── academics/
+│   ├── students/
+│   └── notifications/
+├── static/                 ← Project-level static files
 ├── requirements.txt
 └── README.md
 ```
 
-> **Note:** There is no top-level `frontend/` directory. All templates live inside `backend/college_ai/templates/` and are served directly by Django. `TEMPLATES['DIRS']` and `STATICFILES_DIRS` both point inside `backend/college_ai/`.
+> **Note:** There is no top-level `frontend/` directory. All templates live inside
+> `templates/` and are served directly by Django.
+> `TEMPLATES['DIRS']` and `STATICFILES_DIRS` both point directly in the project root.
 
 ---
 
@@ -238,7 +237,6 @@ venv\Scripts\activate          # Windows
 pip install -r requirements.txt
 
 # Configure environment
-cd backend/college_ai
 cp .env.example .env
 # Edit .env — set SECRET_KEY, DEBUG=True, ALLOWED_HOSTS=127.0.0.1,localhost,
 # and GROQ_API_KEY (required for the AI assistant feature)
@@ -296,7 +294,6 @@ Open **http://127.0.0.1:8000/** — redirects to login or the correct role-based
 ## Running Tests
 
 ```bash
-cd backend/college_ai
 python -m pytest tests/ -v
 ```
 

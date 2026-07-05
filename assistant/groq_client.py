@@ -33,7 +33,7 @@ def _get_client():
     if not api_key:
         raise ValueError(
             "GROQ_API_KEY is not set in .env. "
-            "Add GROQ_API_KEY=your-key to backend/college_ai/.env"
+            "Add GROQ_API_KEY=your-key to .env"
         )
     return OpenAI(
         api_key=api_key,
